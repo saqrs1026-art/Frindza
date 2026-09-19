@@ -18,31 +18,31 @@ jobs:
 
       - name: Unzip Source Code
         run: |
-          echo "Searching for zip file in the repository..."
-          find . -maxdepth 3 -ls
-          # البحث عن ملف الـ zip في كل المجلدات الفرعية تلقائياً
-          ZIP_FILE=$(find . -iname "*.zip" | head -n 1)
-          echo "Found zip file at: $ZIP_FILE"
-          if [ -z "$ZIP_FILE" ]; then
-            echo "Error: No zip file found anywhere in the repository!"
-            exit 1
-          fi
+          echo "=== Repository Files ==="
+          ls -la
+          ZIP_FILE=$(find . -maxdepth 2 -iname "*.zip" | head -n 1)
+          echo "Found zip file: $ZIP_FILE"
+          mkdir -p extracted_project
           unzip -q "$ZIP_FILE" -d extracted_project
-          echo "Extracted successfully"
+          echo "=== Extracted Contents ==="
+          find extracted_project -maxdepth 2
 
       - name: Update Website URL to friendza.pro
         run: |
-          cd extracted_project
-          find . -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://demo.playtubescript.com|https://friendza.pro|g' {} +
-          find . -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://demo.playtubescript.com|https://friendza.pro|g' {} +
-          find . -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://yourdomain.com|https://friendza.pro|g' {} +
-          find . -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://yourdomain.com|https://friendza.pro|g' {} +
+          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://demo.playtubescript.com|https://friendza.pro|g' {} +
+          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://demo.playtubescript.com|https://friendza.pro|g' {} +
+          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://yourdomain.com|https://friendza.pro|g' {} +
+          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://yourdomain.com|https://friendza.pro|g' {} +
 
       - name: Build APK with Gradle
         run: |
-          cd extracted_project
-          PROJECT_DIR=$(find . -name "gradlew" -exec dirname {} \;)
-          echo "Project directory: $PROJECT_DIR"
+          GRADLEW_PATH=$(find extracted_project -name "gradlew" | head -n 1)
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "Error: gradlew file not found anywhere!"
+            exit 1
+          fi
+          PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+          echo "Found gradlew in directory: $PROJECT_DIR"
           cd "$PROJECT_DIR"
           chmod +x gradlew
           ./gradlew assembleRelease
