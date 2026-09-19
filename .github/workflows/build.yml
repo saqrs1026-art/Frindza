@@ -16,17 +16,28 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Unzip Source Code
+      - name: Deep Unzip and Extract All
         run: |
+          echo "=== Root Files ==="
+          ls -la
           ZIP_FILE=$(find . -maxdepth 2 -iname "*.zip" | head -n 1)
-          echo "Found zip file: $ZIP_FILE"
+          echo "Found main zip: $ZIP_FILE"
           mkdir -p extracted_project
           unzip -q "$ZIP_FILE" -d extracted_project
+          
+          echo "=== Checking for nested ZIP files ==="
+          find extracted_project -iname "*.zip" | while read nested_zip; do
+            echo "Extracting nested zip: $nested_zip"
+            unzip -q "$nested_zip" -d "$(dirname "$nested_zip")/unpacked_inner" || true
+          done
+
+          echo "=== Locating Gradle Project Files ==="
+          find extracted_project -name "build.gradle" -o -name "settings.gradle"
 
       - name: Update Website URL to friendza.pro
         run: |
           find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://demo.playtubescript.com|https://friendza.pro|g' {} + || true
-          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://demo.playtubescript.com|https://friendza.pro|g' {} + || true
+          find.extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://demo.playtubescript.com|https://friendza.pro|g' {} + || true
           find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://yourdomain.com|https://friendza.pro|g' {} + || true
           find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://yourdomain.com|https://friendza.pro|g' {} + || true
 
@@ -34,15 +45,21 @@ jobs:
         run: |
           SETTINGS_FILE=$(find extracted_project -name "settings.gradle" -o -name "settings.gradle.kts" | head -n 1)
           if [ -z "$SETTINGS_FILE" ]; then
-            echo "Error: settings.gradle not found anywhere in extracted files!"
-            exit 1
+            BUILD_FILE=$(find extracted_project -name "build.gradle" | head -n 1)
+            if [ -z "$BUILD_FILE" ]; then
+              echo "Error: No build files found anywhere!"
+              exit 1
+            fi
+            PROJECT_DIR=$(dirname "$BUILD_FILE")
+          else
+            PROJECT_DIR=$(dirname "$SETTINGS_FILE")
           fi
-          PROJECT_DIR=$(dirname "$SETTINGS_FILE")
-          echo "Found Android project root at: $PROJECT_DIR"
+          
+          echo "Found Android project directory at: $PROJECT_DIR"
           cd "$PROJECT_DIR"
           
           if [ ! -f "./gradlew" ]; then
-            echo "gradlew not found, generating gradle wrapper..."
+            echo "gradlew not found, generating wrapper..."
             gradle wrapper
           fi
           chmod +x gradlew
