@@ -24,8 +24,8 @@ jobs:
           echo "Found zip file: $ZIP_FILE"
           mkdir -p extracted_project
           unzip -q "$ZIP_FILE" -d extracted_project
-          echo "=== Extracted Contents ==="
-          find extracted_project -maxdepth 2
+          echo "=== All Extracted Files and Folders ==="
+          find extracted_project -maxdepth 3
 
       - name: Update Website URL to friendza.pro
         run: |
@@ -36,15 +36,26 @@ jobs:
 
       - name: Build APK with Gradle
         run: |
-          GRADLEW_PATH=$(find extracted_project -name "gradlew" | head -n 1)
+          GRADLEW_PATH=$(find extracted_project -iname "gradlew" | head -n 1)
           if [ -z "$GRADLEW_PATH" ]; then
-            echo "Error: gradlew file not found anywhere!"
-            exit 1
+            echo "Warning: gradlew not found, searching for build.gradle..."
+            BUILD_FILE=$(find extracted_project -name "build.gradle" | head -n 1)
+            if [ -n "$BUILD_FILE" ]; then
+              PROJECT_DIR=$(dirname "$BUILD_FILE")
+              echo "Found build.gradle in: $PROJECT_DIR, generating gradle wrapper..."
+              cd "$PROJECT_DIR"
+              gradle wrapper
+              chmod +x gradlew
+            else
+              echo "Error: Neither gradlew nor build.gradle found!"
+              exit 1
+            fi
+          else
+            PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+            echo "Found gradlew in directory: $PROJECT_DIR"
+            cd "$PROJECT_DIR"
+            chmod +x gradlew
           fi
-          PROJECT_DIR=$(dirname "$GRADLEW_PATH")
-          echo "Found gradlew in directory: $PROJECT_DIR"
-          cd "$PROJECT_DIR"
-          chmod +x gradlew
           ./gradlew assembleRelease
 
       - name: Upload APK Artifact
