@@ -18,7 +18,14 @@ jobs:
 
       - name: Unzip Source Code
         run: |
-          unzip -q "*.zip" -d extracted_project
+          # محاولة فك الضغط بالاسم الدقيق أو بأي ملف مضغوط موجود
+          if [ -f "PlayTube.zip" ]; then
+            unzip -q "PlayTube.zip" -d extracted_project
+          elif [ -f "playtube.zip" ]; then
+            unzip -q "playtube.zip" -d extracted_project
+          else
+            unzip -q "*.zip" -d extracted_project
+          fi
           echo "Extracted successfully"
 
       - name: Update Website URL to friendza.pro
