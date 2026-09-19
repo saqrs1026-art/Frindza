@@ -1,0 +1,47 @@
+name: Build PlayTube APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Unzip Source Code
+        run: |
+          unzip -q "*.zip" -d extracted_project
+          echo "Extracted successfully"
+
+      - name: Update Website URL to friendza.pro
+        run: |
+          cd extracted_project
+          find . -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://demo.playtubescript.com|https://friendza.pro|g' {} +
+          find . -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://demo.playtubescript.com|https://friendza.pro|g' {} +
+          find . -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://yourdomain.com|https://friendza.pro|g' {} +
+          find . -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://yourdomain.com|https://friendza.pro|g' {} +
+
+      - name: Build APK with Gradle
+        run: |
+          cd extracted_project
+          PROJECT_DIR=$(find . -name "gradlew" -exec dirname {} \;)
+          echo "Project directory: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlayTube-App-APK
+          path: |
+            **/build/outputs/apk/release/*.apk
+            **/app/build/outputs/apk/release/*.apk
