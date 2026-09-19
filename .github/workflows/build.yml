@@ -25,25 +25,24 @@ jobs:
 
       - name: Update Website URL to friendza.pro
         run: |
-          TARGET_DIR="extracted_project/PlayTube"
-          if [ ! -d "$TARGET_DIR" ]; then
-            TARGET_DIR="extracted_project"
-          fi
-          find "$TARGET_DIR" -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://demo.playtubescript.com|https://friendza.pro|g' {} + || true
-          find "$TARGET_DIR" -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://demo.playtubescript.com|https://friendza.pro|g' {} + || true
-          find "$TARGET_DIR" -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://yourdomain.com|https://friendza.pro|g' {} + || true
-          find "$TARGET_DIR" -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://yourdomain.com|https://friendza.pro|g' {} + || true
+          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://demo.playtubescript.com|https://friendza.pro|g' {} + || true
+          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://demo.playtubescript.com|https://friendza.pro|g' {} + || true
+          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://yourdomain.com|https://friendza.pro|g' {} + || true
+          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://yourdomain.com|https://friendza.pro|g' {} + || true
 
       - name: Build APK with Gradle
         run: |
-          PROJECT_DIR="extracted_project/PlayTube"
-          if [ ! -d "$PROJECT_DIR" ]; then
-            PROJECT_DIR=$(dirname $(find extracted_project -name "build.gradle" | head -n 1))
+          SETTINGS_FILE=$(find extracted_project -name "settings.gradle" -o -name "settings.gradle.kts" | head -n 1)
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "Error: settings.gradle not found anywhere in extracted files!"
+            exit 1
           fi
-          echo "Working in project directory: $PROJECT_DIR"
+          PROJECT_DIR=$(dirname "$SETTINGS_FILE")
+          echo "Found Android project root at: $PROJECT_DIR"
           cd "$PROJECT_DIR"
           
           if [ ! -f "./gradlew" ]; then
+            echo "gradlew not found, generating gradle wrapper..."
             gradle wrapper
           fi
           chmod +x gradlew
