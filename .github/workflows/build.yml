@@ -18,11 +18,9 @@ jobs:
 
       - name: Unzip Source Code
         run: |
-          echo "Files in repository:"
+          echo "Listing repository contents:"
           ls -la
-          ZIP_FILE=$(find . -maxdepth 1 -name "*.zip" -o -name "*.ZIP" | head -n 1)
-          echo "Found zip file: $ZIP_FILE"
-          unzip -q "$ZIP_FILE" -d extracted_project
+          unzip -q PlayTube.zip -d extracted_project
           echo "Extracted successfully"
 
       - name: Update Website URL to friendza.pro
