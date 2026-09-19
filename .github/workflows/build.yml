@@ -18,13 +18,13 @@ jobs:
 
       - name: Unzip Source Code
         run: |
-          echo "Listing repository contents:"
-          ls -la
-          # البحث عن أي ملف بصيغة zip بغض النظر عن الحروف الكبيرة أو الصغيرة
-          ZIP_FILE=$(find . -maxdepth 1 -iname "*.zip" | head -n 1)
-          echo "Found zip file: $ZIP_FILE"
+          echo "Searching for zip file in the repository..."
+          find . -maxdepth 3 -ls
+          # البحث عن ملف الـ zip في كل المجلدات الفرعية تلقائياً
+          ZIP_FILE=$(find . -iname "*.zip" | head -n 1)
+          echo "Found zip file at: $ZIP_FILE"
           if [ -z "$ZIP_FILE" ]; then
-            echo "Error: No zip file found in the repository!"
+            echo "Error: No zip file found anywhere in the repository!"
             exit 1
           fi
           unzip -q "$ZIP_FILE" -d extracted_project
