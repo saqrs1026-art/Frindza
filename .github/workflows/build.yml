@@ -18,21 +18,14 @@ jobs:
 
       - name: Unzip Source Code
         run: |
-          echo "=== Repository Files ==="
+          echo "=== Root Files in Repository ==="
           ls -la
           ZIP_FILE=$(find . -maxdepth 2 -iname "*.zip" | head -n 1)
           echo "Found zip file: $ZIP_FILE"
           mkdir -p extracted_project
           unzip -q "$ZIP_FILE" -d extracted_project
-          echo "=== Deep Search for build.gradle ==="
-          find extracted_project -name "build.gradle"
-
-      - name: Update Website URL to friendza.pro
-        run: |
-          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://demo.playtubescript.com|https://friendza.pro|g' {} + || true
-          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://demo.playtubescript.com|https://friendza.pro|g' {} + || true
-          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|http://yourdomain.com|https://friendza.pro|g' {} + || true
-          find extracted_project -type f \( -name "*.java" -o -name "*.kt" -o -name "*.xml" \) -exec sed -i 's|https://yourdomain.com|https://friendza.pro|g' {} + || true
+          echo "=== ALL Extracted Files and Folders Inside ZIP ==="
+          ls -R extracted_project
 
       - name: Build APK with Gradle
         run: |
