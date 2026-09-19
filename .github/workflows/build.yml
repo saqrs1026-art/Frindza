@@ -16,49 +16,24 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Inspect and Unzip Source Code
+      - name: Inspect and List ZIP Contents
         run: |
-          echo "=== Root Files in Repository ==="
+          echo "=== Root Repository Files ==="
           ls -la
           
           ZIP_FILE=$(find . -maxdepth 2 -iname "*.zip" | head -n 1)
-          echo "Found zip file: $ZIP_FILE"
+          echo "Target ZIP file: $ZIP_FILE"
           
           if [ -z "$ZIP_FILE" ]; then
-            echo "Error: No ZIP file found in repository!"
+            echo "❌ Error: No ZIP file found in the repository!"
             exit 1
           fi
           
-          echo "=== Contents inside the ZIP file ==="
+          echo "=== List of all files inside the ZIP ==="
           unzip -l "$ZIP_FILE"
           
           mkdir -p extracted_project
           unzip -q "$ZIP_FILE" -d extracted_project
-          echo "=== Files after extraction ==="
-          find extracted_project -maxdepth 3
-
-      - name: Build APK with Gradle
-        run: |
-          BUILD_FILE=$(find extracted_project -name "build.gradle" | head -n 1)
-          if [ -z "$BUILD_FILE" ]; then
-            echo "Error: build.gradle not found!"
-            exit 1
-          fi
-          PROJECT_DIR=$(dirname "$BUILD_FILE")
-          echo "Found Android project directory at: $PROJECT_DIR"
-          cd "$PROJECT_DIR"
           
-          if [ ! -f "./gradlew" ]; then
-            echo "gradlew not found, generating wrapper..."
-            gradle wrapper
-          fi
-          chmod +x gradlew
-          ./gradlew assembleRelease
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PlayTube-App-APK
-          path: |
-            **/build/outputs/apk/release/*.apk
-            **/app/build/outputs/apk/release/*.apk
+          echo "=== Directory structure after extraction ==="
+          find extracted_project -maxdepth 3
